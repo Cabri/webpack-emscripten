@@ -1,14 +1,14 @@
 {
   "name": "@wasm-tool/emscripten",
   "version": "1.0.0",
-  "description": "Emscripten loader for webpack",
-  "main": "loader.js",
+  "description": "Two-phases Emscripten loader for webpack",
+  "main": "cpp-packager.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wasm-tool/emscripten.git"
+    "url": "git+https://github.com/polx/webpack-emscripten.git"
   },
   "keywords": [
     "emscripten",
@@ -18,12 +18,13 @@
     "webassembly",
     "loader"
   ],
-  "author": "Sven Sauleau <sven@sauleau.com>",
+  "author": "Paul Libbrecht <paul.librecht@cabri.com>",
+  "contributors": ["Sven Sauleau <sven@sauleau.com>"],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/wasm-tool/emscripten/issues"
+    "url": "https://github.com/polx/webpack-emscripten/issues"
   },
-  "homepage": "https://github.com/wasm-tool/emscripten#readme",
+  "homepage": "https://github.com/polx/webpack-emscripten#readme",
   "devDependencies": {
     "loader-utils": "^1.2.3"
   }
