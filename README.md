@@ -1,12 +1,12 @@
-# @wasm-tool/emscripten
+# webpack-emscripten
 
-> Emscripten loader for webpack
+> Two-phases Emscripten loader for webpack
+Forked from the simpler [wasm-tool/emscripten](https://github.com/polx/webpack-emscripten).
 
 ## Installation
 
-```sh
-npm i -D @wasm-tool/emscripten
-```
+Copy the loaders into `webpack` within your directory.
+Create or enrich the webpack config as below
 
 ## Usage: webpack
 
@@ -18,9 +18,23 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.c$/,
-        type: "javascript/auto",
-        loader: "@wasm-tool/emscripten"
+        test: /\.cpp$/,
+        loader: path.resolve('webpack/cpp-loader.js')
+      }
+      {
+        test: /\.cp$/,
+        loader: path.resolve('webpack/cpp-loader.js')
+      }
+      {
+        test: /\.emsc.js$/,
+        loader: path.resolve('webpack/cpp-packager.js'),
+        options : 
+        {
+          cfiles : 
+          [
+            'src/AClass.cpp'
+          ]
+         }
       }
     ]
   },
@@ -30,13 +44,12 @@ module.exports = {
   // ...
 };
 ```
+Create a placeholder `EmscriptenModule.emsc.js` file (which can be empty).
 
-We need to set the `type` to JavaScript to bypass webpack's wasm support (as a workaround, for now). Which will also prevent the loading to work correclty in non-web environements.
-
-You can then directly import c files:
+You can then import it to obtain a promise that delivers the Emscripten's runtime object where, for example, classes resulting of [Embind](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html) can be directly invoked.
 
 ```js
-import("./add.c").then(exports => ...);
+import("./EmscriptenModule.emsc.js").then(exports => ...);
 ```
 
 `emcc` must be available in your `$PATH`, see http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html.
