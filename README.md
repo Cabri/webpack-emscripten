@@ -65,4 +65,5 @@ See the example.
 * Break cleanly if there's a C++ compilation failure
   (currently, it is often a good idea to remove the `build` directory).
 * Do not relink (phase of the cpp-packager) in case neither the C++ nor the emsc.js files are changed.
-* (potential) find a way to vary the 
+* (potential) find a way to vary the emcc parameters (in particular the includes); 
+  the current plan is just to incrementally include all compiled directories.
