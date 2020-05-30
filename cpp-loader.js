@@ -32,7 +32,7 @@ function runEmcc(cwd, cppFile, includeDir) {
     let args = [ "-DEmscripten", "-std=c++11",  "--bind"];
     if (mode === "development")
         args.push(...["-g4", "-D_DEBUG"]);
-    else args.push(...["g0", "-Oz"]);
+    else args.push(...["-g0", "-Oz"]);
     if(/.cpp/i.test(cppFile)) args.push( "-std=c++11");
     if(includeDir) args.push(`-I${includeDir}`);
     args.push(...["-Isrc", `-I${cwd}`, "-I/usr/local/include"]);

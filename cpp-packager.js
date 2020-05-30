@@ -21,7 +21,7 @@ function runEmcc(cwd, ofiles, outputFile) {
         "-s", "EXPORT_NAME=EmscriptenInit"];
     if (mode === "development")
         args.push(...["-g4", "-D_DEBUG"]);
-        else args.push(...["g0", "-Oz"]);
+        else args.push(...["-g0", "-Oz"]);
     args.push(...["-Isrc", `-I${cwd}`, "-I/usr/local/include"]);
     args.push(...ofiles);
     const options = { cwd };
@@ -29,7 +29,7 @@ function runEmcc(cwd, ofiles, outputFile) {
     return execFileSync(emcc, args, options);
 }
 
-function requestDependencies(directory, cFiles, loadModule, callback)
+function requestDependencies(directory, request, cFiles, loadModule, callback)
 {
     let remainingCount = cFiles.length;
     const lmCallBack = (err, source, sourceMap, module) => {
@@ -46,7 +46,8 @@ function requestDependencies(directory, cFiles, loadModule, callback)
         if(!cFile.startsWith('/') && !cFile.startsWith('/'))
             cFile = './' + cFile; // TODO: that may fail on Windows
         console.log("Adding dependency " + join(directory,cFile));
-        loadModule("../../cpp-loader.js!" + join(directory,cFile), lmCallBack)
+        let otherLoader = request.replace(new RegExp("/cpp-packager.js\\?.*"), "/cpp-loader.js");
+        loadModule(otherLoader + "!" + join(directory,cFile), lmCallBack)
     });
     return ofiles;
 }
@@ -80,7 +81,7 @@ module.exports = function(source, map, meta) {
     let base = filename.replace(/.emsc.js$/i, "");
     const outputjs = options.outputjs || base + ".js";
     //console.log("Will request dependency of ", options.cfiles);
-    let ofiles = requestDependencies(this.context, options.cfiles, this.loadModule,
+    let ofiles = requestDependencies(this.context, this.request, options.cfiles, this.loadModule,
         () => {
             console.log("Packaging ");
             runEmcc(tmpdir, ofiles, outputjs);
