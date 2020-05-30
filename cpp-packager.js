@@ -7,31 +7,25 @@ const {
     readFileSync
 } = require("fs");
 const { tmpdir } = require("os");
-const loaderUtils = require("loader-utils");
+const {initWEC, workoutBuildPath} = require("./webpack-emscripten-commons");
+
+let debug, mode;
 
 const emcc = "emcc";
 
-function createOutputDir() {
-    let path = join(__dirname, "..","build");
-    if (!existsSync(path))  mkdirSync(path);
-    path = join(path, "wasm-tool-emscripten");
-    if (!existsSync(path))  mkdirSync(path);
-    path = join(path, "web");
-    if (!existsSync(path))  mkdirSync(path);
-    return path;
-}
 
 function runEmcc(cwd, ofiles, outputFile) {
     const args = ["-o", outputFile, "--bind",
-        "-DEmscripten", "-g4", "-D_DEBUG", "-fPIC",
-        "-pipe", "-fexceptions", "-fmessage-length=0", "-Wall", "-Wno-unused-variable",
-        "-Wno-non-virtual-dtor", "-Wno-deprecated", "-std=c++11", "-DUSE_BLAS",
-        "-s", "EXPORT_ES6",
-        "-s","ENVIRONMENT=web", "-s", "MODULARIZE", "-s", "EXPORT_NAME=EmscriptenInit"];
+        "-DEmscripten", "-std=c++11",  "-s", "EXPORT_ES6",
+        "-s","ENVIRONMENT=web", "-s", "MODULARIZE",
+        "-s", "EXPORT_NAME=EmscriptenInit"];
+    if (mode === "development")
+        args.push(...["-g4", "-D_DEBUG"]);
+        else args.push(...["g0", "-Oz"]);
     args.push(...["-Isrc", `-I${cwd}`, "-I/usr/local/include"]);
     args.push(...ofiles);
     const options = { cwd };
-    //console.log("Running emscripten: ", emcc, args, options);
+    if(debug) console.log("Running emscripten: ", emcc, args, options);
     return execFileSync(emcc, args, options);
 }
 
@@ -39,6 +33,7 @@ function requestDependencies(directory, cFiles, loadModule, callback)
 {
     let remainingCount = cFiles.length;
     const lmCallBack = (err, source, sourceMap, module) => {
+        if(err) console.log(`Error at module ${module}: ${err}`);
         remainingCount--;
         if(module)
             console.log("Done: " + module.rawRequest);
@@ -50,17 +45,23 @@ function requestDependencies(directory, cFiles, loadModule, callback)
         ofiles.push(join("..", "object", basename(cFile).replace(/.c(pp)?$/, ".o")));
         if(!cFile.startsWith('/') && !cFile.startsWith('/'))
             cFile = './' + cFile; // TODO: that may fail on Windows
-        loadModule(cFile, lmCallBack)
+        console.log("Adding dependency " + join(directory,cFile));
+        loadModule("../../cpp-loader.js!" + join(directory,cFile), lmCallBack)
     });
     return ofiles;
 }
 
 module.exports = function(source, map, meta) {
-    const tmpdir = createOutputDir();
     const filename = basename(this.resource);
     const webpackCallback = this.async();
+    debug = this.debug;
+    mode = this.mode;
+    initWEC(this);
+    const tmpdir = workoutBuildPath("web");
 
-    const options = loaderUtils.getOptions(this) || {};
+    console.log(`this.request : ${this.request}, `)
+
+    const options = this.getOptions() || {};
     const publicPath =
         typeof options.publicPath === "string"
             ? options.publicPath === "" || options.publicPath.endsWith("/")
@@ -89,25 +90,22 @@ module.exports = function(source, map, meta) {
             const wasmPath = join(publicPath, base + ".wasm");
             const wasm = readFileSync(join(tmpdir, base + ".wasm"));
             writeFileSync(wasmPath, wasm);
-
+            // import async ?
             const result= ` // this is the loader of the emscripten initialization
                 import EmscriptenInit from "${join(tmpdir, base + ".js")}";
                 window.Module = EmscriptenInit;
                 console.log("Invoking EmscriptenInit.", typeof(EmscriptenInit));
                 // TODO: add version information from git or the hash of webpack
                 let listener = null;
-                EmscriptenInit().then((EmscriptenRuntime)=>{
-                    if(console && console.log) {
-                        console.log("EmscriptenRuntime is here.", EmscriptenRuntime);
-                    }
-                    // --- this is ${this.resource}
-                    let s=function() {
-                        ${source}
-                    }; s();
-                    // --- end include ${this.resource}
-                    if(listener) listener(EmscriptenRuntime);
-                });
-                export const listen = (f) => {listener = f;}
+                console.log("Initializing Emscripten runtime");
+                const emRuntime = EmscriptenInit();
+                console.log("Got Emscripten runtime", emRuntime);
+                export default emRuntime; 
+                // --- this is ${this.resource}
+                let s=function() {
+                    ${source}
+                }; s();
+                // --- end include ${this.resource}
                 `;
             webpackCallback(null, result, null);
         });

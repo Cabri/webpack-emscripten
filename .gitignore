@@ -2,3 +2,8 @@ node_modules/
 package-lock.json
 emsdk/
 dist/
+build/
+.DS_Store
+.idea
+.eclipse
+
