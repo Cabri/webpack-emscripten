@@ -4,9 +4,9 @@ Two-phases Emscripten loader for webpack
 Forked from the simpler [wasm-tool/emscripten](https://github.com/polx/webpack-emscripten) where
 an import could be on a simple C file.
 
-The objective fo the this two-phases loader is to separate C++ compilation and "linking to WebAssembly" and
-allow the JS to C++ connections permitted by [Embind](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html).
-It allows a flexible embedding of C++ classes and objects within JS code.
+The objective fo the this two-phases loader is to separate C/C++ compilation and "linking to WebAssembly" and
+allow the JS to C++ connections permitted, e.g., by [Embind](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html).
+It allows a flexible embedding of C/C++ classes and objects within JS code.
 
 ## Installation
 
@@ -65,5 +65,4 @@ See the example.
 * Break cleanly if there's a C++ compilation failure
   (currently, it is often a good idea to remove the `build` directory).
 * Do not relink (phase of the cpp-packager) in case neither the C++ nor the emsc.js files are changed.
-* (potential) find a way to vary the emcc parameters (in particular the includes); 
-  the current plan is just to incrementally include all compiled directories.
+* (potential) find a way to vary the emcc parameters (in particular the includes);  the current method is just to incrementally include all compiled directories.
