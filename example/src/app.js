@@ -24,6 +24,11 @@ let f = async function() {
         document.createTextNode("From RandomNumberContainerCppClass: "
             + new emR.RandomNumberContainerCppClass().getNumber() + ".")
     );
+
+    window.numC = new emR.NumberContainerCppClass();
+    window.numC.number = 33;
+    window.numC.showTheNumber();
+    window.numC.showTheNumber();
 };
 f();
 

@@ -3,7 +3,7 @@ const { join, basename } = require("path");
 const {
     existsSync,
     mkdirSync,
-    writeFileSync,
+    writeFileSync, copyFileSync,
     readFileSync
 } = require("fs");
 const { tmpdir } = require("os");
@@ -18,7 +18,8 @@ function runEmcc(cwd, ofiles, outputFile) {
     const args = ["-o", outputFile, "--bind",
         "-DEmscripten", "-std=c++11",  "-s", "EXPORT_ES6",
         "-s","ENVIRONMENT=web", "-s", "MODULARIZE",
-        "-s", "EXPORT_NAME=EmscriptenInit"];
+        "-s", "EXPORT_NAME=EmscriptenInit",
+        ];
     if (mode === "development")
         args.push(...["-g4", "-D_DEBUG"]);
         else args.push(...["-g0", "-Oz"]);
@@ -90,6 +91,21 @@ module.exports = function(source, map, meta) {
             const wasm = readFileSync(join(tmpdir, base + ".wasm"));
             console.log("Writing wasm to " + wasmPath)
             writeFileSync(wasmPath, wasm);
+
+            // debug? copy .wasm.map file if there as well as all source files
+            if(debug) {
+                if (existsSync(join(tmpdir, base + ".wasm.map"))) {
+                    writeFileSync(join(publicPath, base + ".wasm.map"),
+                        readFileSync(join(tmpdir, base + ".wasm.map")).toString().replace(/..\/object\//g,"./"));
+
+                    options.cfiles.forEach((cFile) => {
+                        copyFileSync(join(this.context,cFile), join(publicPath, basename(cFile)));
+                    });
+                }
+            }
+
+
+
             const result= ` // this is the loader of the emscripten initialization
                 import EmscriptenInit from "${join(tmpdir, base + ".js")}";
                 console.log("Invoking EmscriptenInit.", typeof(EmscriptenInit));
