@@ -65,12 +65,10 @@ module.exports = function(source, map, meta) {
     const options = this.getOptions() || {};
     const publicPath =
         typeof options.publicPath === "string"
-            ? options.publicPath === "" || options.publicPath.endsWith("/")
-            ? options.publicPath
-            : `${options.publicPath}/`
-            : typeof options.publicPath === "function"
-            ? options.publicPath(this.resourcePath, this.rootContext)
-            : this._compilation.outputOptions.publicPath || "dist";
+            ? options.path === "" || options.publicPath.endsWith("/")
+            ? options.path
+            : `${options.path}/`
+            : this._compilation.outputOptions.path || "dist";
 
     if (!existsSync(publicPath)) {
         mkdirSync(publicPath);
@@ -90,23 +88,23 @@ module.exports = function(source, map, meta) {
                 readFileSync(join(tmpdir, outputjs)).toString().replace(/import.meta.url/, "null"));
             const wasmPath = join(publicPath, base + ".wasm");
             const wasm = readFileSync(join(tmpdir, base + ".wasm"));
+            console.log("Writing wasm to " + wasmPath)
             writeFileSync(wasmPath, wasm);
-            // import async ?
             const result= ` // this is the loader of the emscripten initialization
                 import EmscriptenInit from "${join(tmpdir, base + ".js")}";
-                window.Module = EmscriptenInit;
                 console.log("Invoking EmscriptenInit.", typeof(EmscriptenInit));
                 // TODO: add version information from git or the hash of webpack
                 let listener = null;
                 console.log("Initializing Emscripten runtime");
-                const emRuntime = EmscriptenInit();
-                console.log("Got Emscripten runtime", emRuntime);
-                export default emRuntime; 
+                const emi = EmscriptenInit();
+                console.log("Initialized Emscripten runtime");
+                window.emi = emi;
                 // --- this is ${this.resource}
                 let s=function() {
                     ${source}
                 }; s();
                 // --- end include ${this.resource}
+                export default emi;
                 `;
             webpackCallback(null, result, null);
         });

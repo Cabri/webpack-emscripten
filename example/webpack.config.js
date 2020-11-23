@@ -28,8 +28,8 @@ module.exports = {
     },
     plugins:  [new HtmlWebpackPlugin()],
     experiments: {
-        importAwait: true,
-        importAsync: true
+        topLevelAwait: true,
+        //importAsync: true
     },
     devServer: {
         contentBase: path.join(__dirname, 'dist'),
