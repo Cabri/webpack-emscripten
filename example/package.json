@@ -1,7 +1,7 @@
 {
   "name": "webpack-emscripten-example",
-  "version": "0.0.1",
-  "description": "A trivial example of C++ and webpack project",
+  "version": "0.0.2",
+  "description": "A simple example of C++ and webpack project",
   "main": "src/app.js",
   "scripts": {
     "serve": "node node_modules/webpack-dev-server/bin/webpack-dev-server.js",
@@ -17,7 +17,8 @@
     "cpluscplus",
     "c++",
     "emscripten",
-    "embind"
+    "embind",
+    "debugging"
   ],
   "author": "Paul Libbrecht",
   "license": "MIT",

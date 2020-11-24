@@ -12,7 +12,7 @@ public:
 
   void showTheNumber() {
     char str[20];
-    puts("Hello there...");
+    puts("Hello there,");
     puts("This is in several lines...");
     sprintf(str, "%d", number);
     puts(str);

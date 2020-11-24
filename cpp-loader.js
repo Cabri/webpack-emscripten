@@ -5,7 +5,8 @@ const {
     existsSync,
     mkdirSync,
     writeFileSync,
-    readFileSync
+    unlinkSync,
+    readFileSync, utimesSync, statSync
 } = require("fs");
 const { tmpdir } = require("os");
 const loaderUtils = require("loader-utils");
@@ -15,19 +16,8 @@ const emcc = "emcc";
 
 let debug, mode;
 
-function checkEmccIsThere(loaderThis) {
-    try {
-        let r = execFileSync(emcc, ["--version"]);
-        if( r.indexOf('\r')>-1)
-            r = r.substring(0, r.indexOf('\r'));
-        console.log(r);
-    } catch (error) {
-        console.log("Error: emcc sounds not to be in the PATH.")
-        loaderThis.emitError(error);
-    }
-}
 
-function runEmcc(cwd, cppFile, includeDir) {
+function runEmcc(cwd, cppFile, includeDir, otherArgs) {
 
     let args = [ "-DEmscripten", "-std=c++11",  "--bind"];
     if (mode === "development")
@@ -35,6 +25,7 @@ function runEmcc(cwd, cppFile, includeDir) {
     else args.push(...["-g0", "-Oz"]);
     if(/.cpp/i.test(cppFile)) args.push( "-std=c++11");
     if(includeDir) args.push(`-I${includeDir}`);
+    if(otherArgs) args.push(...otherArgs);
     args.push(...["-Isrc", `-I${cwd}`, "-I/usr/local/include"]);
     const oFile = extractRoot(cppFile) + ".o";
     args.push(...["-o", oFile, "-c", cppFile]);
@@ -50,7 +41,6 @@ const extractRoot = (cppFile) => {return cppFile.replace(/.c(pp)?$/i, "")}
 
 module.exports = function(source, map, meta) {
     initWEC(this);
-    checkEmccIsThere (this);
     const tmpdir = workoutBuildPath("object");
     const filenameRoot = extractRoot(basename(this.resource));
     debug = this.debug;
@@ -60,7 +50,7 @@ module.exports = function(source, map, meta) {
         return "";
     }
     const file = join(tmpdir, basename(this.resource));
-    // THINKME: use options for escmripten?
+    this.addDependency(file)
     const options = loaderUtils.getOptions(this) || {};
 
     if(existsSync(file)) {
@@ -69,10 +59,18 @@ module.exports = function(source, map, meta) {
             return `${filenameRoot}.o`;
         }
     }
-    //console.log("File? ", file)
-    //console.log("---"); console.log(source.toString()); console.log("---");
-    writeFileSync(file, source.toString());
-    console.log("Invoking compilation of " + file);
-    runEmcc(tmpdir, file, this.context);
-    return `${filenameRoot}.o`;
+    try {
+        writeFileSync(file, source.toString());
+        const stat = statSync(this.resource);
+        utimesSync(file, stat.atime, stat.mtime);
+
+        console.log("Invoking compilation of " + file);
+        runEmcc(tmpdir, file, this.context, options.otherArgs);
+        return `${filenameRoot}.o`;
+    } catch (e) {
+        unlinkSync(file);
+        console.log("Error at compilation", e)
+        emitError(e);
+        return "";
+    }
 };

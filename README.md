@@ -62,7 +62,5 @@ See the example.
 
 ## TODOs
 
-* Break cleanly if there's a C++ compilation failure
-  (currently, it is often a good idea to remove the `build` directory).
-* Do not relink (phase of the cpp-packager) in case neither the C++ nor the emsc.js files are changed.
-* (potential) find a way to vary the emcc parameters (in particular the includes);  the current method is just to incrementally include all compiled directories.
+* Find a way to avoid the `window.emi` hack (see [webpack's issue 10890](https://github.com/webpack/webpack/issues/10890))
+  so that promises are properly used as results of an import
