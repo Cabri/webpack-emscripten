@@ -64,3 +64,14 @@ See the example.
 
 * Find a way to avoid the `window.emi` hack (see [webpack's issue 10890](https://github.com/webpack/webpack/issues/10890))
   so that promises are properly used as results of an import
+  
+  
+## About
+
+This project is being maintained by [Paul Libbrecht](https://github.com/polx/) so as to contribute 
+to the development for [CabriLog SAS](https://cabri.com). 
+The project forks from [wasm-tool/emscripten](https://github.com/wasm-tool/emscripten) by
+[Sven Sauleau](https://github.com/xtuc) and uses help from, among others, 
+[Tobias Koppers](https://github.com/sokra),
+[Alexander Akait](https://github.com/evilebottnawi) ([here](https://github.com/webpack/webpack/issues/10890)), 
+and [Will Scott](https://github.com/willscott) ([here](https://github.com/oasislabs/wasi-runner/issues/12)).
